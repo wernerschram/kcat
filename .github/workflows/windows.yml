@@ -1,20 +1,22 @@
-name: windows-binaries
+name: Build kcat (Windows)
 
 on:
   push:
-    branches: [master]
+    branches: [ master ]
   pull_request:
-    branches: [master]
-  workflow_dispatch:   # allows manual trigger
+    branches: [ master ]
+  workflow_dispatch:
 
-
-jobs: 
+jobs:
   build:
     runs-on: windows-latest
 
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
 
       - name: Install VS2017 Build Tools with v140 toolset + Windows 8.1 SDK
         run: |
@@ -25,20 +27,24 @@ jobs:
             --includeRecommended --includeOptional" -y
           refreshenv
 
-      - uses: nuget/setup-nuget@v2
-        with:
-          nuget-version: '5.x'
-
-      - run: nuget restore win32/kcat.sln
-
       - name: Build kcat (x64 Release)
         run: msbuild win32\kcat.sln /p:Configuration=Release /p:Platform=x64
 
-
-      - name: Upload build artifacts
+      - name: Upload x64 artifacts
         uses: actions/upload-artifact@v4
         with:
           name: kcat-windows-x64
           path: |
             win32\x64\Release\*.exe
-            win32\x64\Release\*.dll        
+            win32\x64\Release\*.dll
+
+      - name: Build kcat (x86 Release)
+        run: msbuild win32\kcat.sln /p:Configuration=Release /p:Platform=Win32
+
+      - name: Upload x86 artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: kcat-windows-x86
+          path: |
+            win32\Release\*.exe
+            win32\Release\*.dll
