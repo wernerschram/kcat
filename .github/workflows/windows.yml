@@ -6,13 +6,22 @@ on:
   pull_request:
     branches: [master]
 
-
-
 jobs: 
   build:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@master
+
+
+      - name: Install VS2017 Build Tools with v140 toolset + Windows 8.1 SDK
+        run: |
+          choco install visualstudio2017buildtools --package-parameters `
+            "--add Microsoft.VisualStudio.Workload.VCTools `
+            --add Microsoft.VisualStudio.Component.VC.v140.x86.x64 `
+            --add Microsoft.VisualStudio.Component.Windows81SDK `
+            --includeRecommended --includeOptional" -y
+          refreshenv
+
       - uses: nuget/setup-nuget@v2
         with:
           nuget-version: '5.x'
@@ -23,4 +32,4 @@ jobs:
       - run: nuget restore win32/kcat.sln
 
       - name: Build app for release
-        run: msbuild win32/kcat.sln
+        run: msbuild win32/kcat.sln /p:Configuration=Release
