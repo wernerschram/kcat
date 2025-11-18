@@ -6,6 +6,8 @@ on:
   pull_request:
     branches: [ master ]
   workflow_dispatch:
+  release:
+    types: [created]
 
 jobs:
   build:
@@ -32,3 +34,35 @@ jobs:
           path: |
             win32\x64\Release\*.exe
             win32\x64\Release\*.dll
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download x64 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: kcat-windows-x64
+          path: ./dist/x64
+
+      - name: Rename artifacts with release tag
+        run: |
+          TAG=${GITHUB_REF##*/}
+          for f in ./dist/x64/*.exe; do
+            mv "$f" "./dist/x64/kcat-${TAG}-x64.exe"
+          done
+          for f in ./dist/x64/*.dll; do
+            mv "$f" "./dist/x64/kcat-${TAG}-x64.dll"
+          done
+
+      - name: Generate SHA256 checksums
+        run: |
+          cd ./dist/x64
+          sha256sum * > SHA256SUMS.txt
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ./dist/x64/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
