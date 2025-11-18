@@ -28,7 +28,7 @@ jobs:
           refreshenv
 
       - name: NuGet Restore
-        run: nuget restore MyProject.sln
+        run: nuget restore win32\kcat.sln
 
       - name: Build kcat (x64 Release)
         run: msbuild win32\kcat.sln /p:Configuration=Release /p:Platform=x64
