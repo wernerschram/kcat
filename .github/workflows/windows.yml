@@ -5,13 +5,16 @@ on:
     branches: [master]
   pull_request:
     branches: [master]
+  workflow_dispatch:   # allows manual trigger
+
 
 jobs: 
   build:
     runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@master
 
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
 
       - name: Install VS2017 Build Tools with v140 toolset + Windows 8.1 SDK
         run: |
@@ -26,10 +29,16 @@ jobs:
         with:
           nuget-version: '5.x'
 
-      - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v2
-
       - run: nuget restore win32/kcat.sln
 
-      - name: Build app for release
-        run: msbuild win32/kcat.sln /p:Configuration=Release
+      - name: Build kcat (x64 Release)
+        run: msbuild win32\kcat.sln /p:Configuration=Release /p:Platform=x64
+
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: kcat-windows-x64
+          path: |
+            win32\x64\Release\*.exe
+            win32\x64\Release\*.dll        
