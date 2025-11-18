@@ -28,7 +28,7 @@ jobs:
       - name: Setup MSBuild (Build Tools)
         uses: microsoft/setup-msbuild@v2
         with:
-          msbuild-path: 'C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin\MSBuild.exe'
+          vswhere-path: 'C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe'
 
       - name: NuGet Restore
         run: nuget restore win32\kcat.sln
