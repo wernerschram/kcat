@@ -27,6 +27,9 @@ jobs:
             --includeRecommended --includeOptional" -y
           refreshenv
 
+      - name: NuGet Restore
+        run: nuget restore MyProject.sln
+
       - name: Build kcat (x64 Release)
         run: msbuild win32\kcat.sln /p:Configuration=Release /p:Platform=x64
 
