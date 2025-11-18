@@ -32,14 +32,3 @@ jobs:
           path: |
             win32\x64\Release\*.exe
             win32\x64\Release\*.dll
-
-      - name: Build kcat (x86 Release)
-        run: msbuild win32\kcat.sln /p:Configuration=Release /p:Platform=Win32
-
-      - name: Upload x86 artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: kcat-windows-x86
-          path: |
-            win32\Release\*.exe
-            win32\Release\*.dll
