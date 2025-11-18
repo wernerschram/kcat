@@ -18,12 +18,10 @@ jobs:
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
 
-      - name: Install VS2017 Build Tools with v140 toolset + Windows 8.1 SDK
+      - name: Install MFC for VS2022
         run: |
-          choco install visualstudio2017buildtools --package-parameters `
-            "--add Microsoft.VisualStudio.Workload.VCTools `
-            --add Microsoft.VisualStudio.Component.VC.v140.x86.x64 `
-            --add Microsoft.VisualStudio.Component.Windows81SDK `
+          choco install visualstudio2022buildtools --package-parameters `
+            "--add Microsoft.VisualStudio.Component.VC.ATLMFC `
             --includeRecommended --includeOptional" -y
           refreshenv
 
