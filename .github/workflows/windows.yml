@@ -19,14 +19,6 @@ jobs:
       - name: Setup MSBuild (Build Tools)
         uses: microsoft/setup-msbuild@v2
 
-        - name: Install MFC components
-          run: |
-            vs_BuildTools.exe ^
-              --quiet --wait --norestart --nocache ^
-              --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 ^
-              --add Microsoft.VisualStudio.Component.VC.140.MFC ^
-              --add Microsoft.VisualStudio.Component.VC.MFC
-
       - name: NuGet Restore
         run: nuget restore win32\kcat.sln
 
