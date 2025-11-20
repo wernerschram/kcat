@@ -132,13 +132,13 @@ jobs:
       - name: Upload x64 ZIP to GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          files: artifacts/kcat-windows-x64.zip
+          files: artifacts/kcat-windows-x64-files.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload x86 ZIP to GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          files: artifacts/kcat-windows-x86.zip
+          files: artifacts/kcat-windows-x86-files.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
