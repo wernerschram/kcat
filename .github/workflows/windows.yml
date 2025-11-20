@@ -54,7 +54,7 @@ jobs:
       # Build Win32 / x86
       # ---------------------------
       - name: Build kcat (x86 Release)
-        run: msbuild win32\kcat.sln /p:Configuration=Release /p:Platform=Win32
+        run: msbuild win32\kcat.sln /p:Configuration=Release /p:Platform=x86
 
       - name: Copy librdkafka DLL (x86)
         shell: pwsh
