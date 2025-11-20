@@ -55,7 +55,7 @@ jobs:
             "zlib1.dll",
             "zstd.dll",
             "msvcp*.dll",
-            "vcruntime*.dll",
+            "vcruntime*.dll"
           )
 
           foreach ($pattern in $keep) {
@@ -100,7 +100,7 @@ jobs:
             "zlib1.dll",
             "zstd.dll",
             "msvcp*.dll",
-            "vcruntime*.dll",
+            "vcruntime*.dll"
           )
 
           foreach ($pattern in $keep) {
