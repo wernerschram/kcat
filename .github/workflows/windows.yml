@@ -7,62 +7,96 @@ on:
     branches: [ master ]
   workflow_dispatch:
   release:
-    types: [created]
+    types: [published]
 
 jobs:
   build:
     runs-on: windows-2022
-
+    outputs:
+      x64-zip: kcat-windows-x64.zip
+      x86-zip: kcat-windows-x86.zip
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
 
-      # Point MSBuild to the Build Tools installation
       - name: Setup MSBuild (Build Tools)
         uses: microsoft/setup-msbuild@v2
 
       - name: NuGet Restore
         run: nuget restore win32\kcat.sln
 
+      # ---------------------------
+      # Build x64
+      # ---------------------------
       - name: Build kcat (x64 Release)
         run: msbuild win32\kcat.sln /p:Configuration=Release /p:Platform=x64
 
-      - name: Upload x64 artifacts
+      - name: Copy librdkafka DLL (x64)
+        shell: pwsh
+        run: |
+          $pkg = Get-ChildItem -Recurse -Path packages -Filter "librdkafka.redist*" | Select-Object -First 1
+          Copy-Item "$($pkg.FullName)\runtimes\win-x64\native\*.dll" "win32\x64\Release\" -Force
+
+      - name: Zip x64 artifacts
+        shell: pwsh
+        run: |
+          Compress-Archive -Path "win32\x64\Release\*" -DestinationPath "kcat-windows-x64.zip" -Force
+
+      - name: Upload x64 artifact
         uses: actions/upload-artifact@v4
         with:
           name: kcat-windows-x64
-          path: |
-            win32\x64\Release\*.exe
-            win32\x64\Release\*.dll
+          path: kcat-windows-x64.zip
 
-  release:
+      # ---------------------------
+      # Build Win32 / x86
+      # ---------------------------
+      - name: Build kcat (x86 Release)
+        run: msbuild win32\kcat.sln /p:Configuration=Release /p:Platform=Win32
+
+      - name: Copy librdkafka DLL (x86)
+        shell: pwsh
+        run: |
+          $pkg = Get-ChildItem -Recurse -Path packages -Filter "librdkafka.redist*" | Select-Object -First 1
+          Copy-Item "$($pkg.FullName)\runtimes\win-x86\native\*.dll" "win32\Release\" -Force
+
+      - name: Zip x86 artifacts
+        shell: pwsh
+        run: |
+          Compress-Archive -Path "win32\Release\*" -DestinationPath "kcat-windows-x86.zip" -Force
+
+      - name: Upload x86 artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kcat-windows-x86
+          path: kcat-windows-x86.zip
+
+
+  # ------------------------------------------------------------
+  # Publish Release Assets (only runs when a GitHub Release is published)
+  # ------------------------------------------------------------
+  publish:
     needs: build
     runs-on: ubuntu-latest
+    if: github.event_name == 'release'
     steps:
-      - name: Download x64 artifact
+      - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          name: kcat-windows-x64
-          path: ./dist/x64
+          path: artifacts
 
-      - name: Rename artifacts with release tag
-        run: |
-          TAG=${GITHUB_REF##*/}
-          for f in ./dist/x64/*.exe; do
-            mv "$f" "./dist/x64/kcat-${TAG}-x64.exe"
-          done
-          for f in ./dist/x64/*.dll; do
-            mv "$f" "./dist/x64/kcat-${TAG}-x64.dll"
-          done
-
-      - name: Generate SHA256 checksums
-        run: |
-          cd ./dist/x64
-          sha256sum * > SHA256SUMS.txt
-
-      - name: Upload to GitHub Release
-        uses: softprops/action-gh-release@v2
+      - name: Upload x64 ZIP to GitHub Release
+        uses: softprops/action-gh-release@v1
         with:
-          files: ./dist/x64/*
+          files: |
+            artifacts/kcat-windows-x64/kcat-windows-x64.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload x86 ZIP to GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            artifacts/kcat-windows-x86/kcat-windows-x86.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
