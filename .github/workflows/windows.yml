@@ -56,7 +56,6 @@ jobs:
             "zstd.dll",
             "msvcp*.dll",
             "vcruntime*.dll",
-            "kcat.pdb"  # optional; remove this line to exclude debug symbols
           )
 
           foreach ($pattern in $keep) {
@@ -65,11 +64,12 @@ jobs:
 
           Compress-Archive -Path "$out/*" -DestinationPath "$out.zip" -Force
 
-      - name: Upload x64 artifact
+      # Upload individual files for CI inspection (not the ZIP)
+      - name: Upload x64 runtime files for CI
         uses: actions/upload-artifact@v4
         with:
-          name: kcat-windows-x64
-          path: kcat-windows-x64.zip
+          name: kcat-windows-x64-files
+          path: kcat-windows-x64/*
 
       # ---------------------------
       # Build x86
@@ -101,7 +101,6 @@ jobs:
             "zstd.dll",
             "msvcp*.dll",
             "vcruntime*.dll",
-            "kcat.pdb"  # optional
           )
 
           foreach ($pattern in $keep) {
@@ -110,11 +109,12 @@ jobs:
 
           Compress-Archive -Path "$out/*" -DestinationPath "$out.zip" -Force
 
-      - name: Upload x86 artifact
+      # Upload individual files for CI inspection (not the ZIP)
+      - name: Upload x86 runtime files for CI
         uses: actions/upload-artifact@v4
         with:
-          name: kcat-windows-x86
-          path: kcat-windows-x86.zip
+          name: kcat-windows-x86-files
+          path: kcat-windows-x86/*
 
   # ---------------------------
   # Publish Release Assets
@@ -132,13 +132,7 @@ jobs:
       - name: Upload x64 ZIP to GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          files: artifacts/kcat-windows-x64/kcat-windows-x64.zip
+          files: artifacts/kcat-windows-x64.zip
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_
 
-      - name: Upload x86 ZIP to GitHub Release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: artifacts/kcat-windows-x86/kcat-windows-x86.zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
