@@ -15,6 +15,7 @@ jobs:
     outputs:
       x64-zip: kcat-windows-x64.zip
       x86-zip: kcat-windows-x86.zip
+
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
@@ -36,13 +37,33 @@ jobs:
         run: |
           $pkg = Get-ChildItem -Recurse -Path "win32/packages" -Filter "librdkafka.redist*" | Select-Object -First 1
           if (-not $pkg) { throw "librdkafka.redist package not found under win32/packages" }
-          $dllPath = Join-Path $pkg.FullName "runtimes/win-x64/native"
-          Copy-Item "$dllPath/*.dll" "win32/x64/Release/" -Force
+          Copy-Item "$($pkg.FullName)\runtimes/win-x64/native/*.dll" "win32/x64/Release/" -Force
 
-      - name: Zip x64 artifacts
+      - name: Zip x64 runtime files
         shell: pwsh
         run: |
-          Compress-Archive -Path "win32\x64\Release\*" -DestinationPath "kcat-windows-x64.zip" -Force
+          $src = "win32/x64/Release"
+          $out = "kcat-windows-x64"
+          New-Item -ItemType Directory $out -Force | Out-Null
+
+          $keep = @(
+            "kcat.exe",
+            "librdkafka.dll",
+            "librdkafkacpp.dll",
+            "libcrypto*.dll",
+            "libssl*.dll",
+            "zlib1.dll",
+            "zstd.dll",
+            "msvcp*.dll",
+            "vcruntime*.dll",
+            "kcat.pdb"  # optional; remove this line to exclude debug symbols
+          )
+
+          foreach ($pattern in $keep) {
+            Get-ChildItem "$src/$pattern" -ErrorAction SilentlyContinue | Copy-Item -Destination $out -Force
+          }
+
+          Compress-Archive -Path "$out/*" -DestinationPath "$out.zip" -Force
 
       - name: Upload x64 artifact
         uses: actions/upload-artifact@v4
@@ -51,7 +72,7 @@ jobs:
           path: kcat-windows-x64.zip
 
       # ---------------------------
-      # Build Win32 / x86
+      # Build x86
       # ---------------------------
       - name: Build kcat (x86 Release)
         run: msbuild win32\kcat.sln /p:Configuration=Release /p:Platform=x86
@@ -61,13 +82,33 @@ jobs:
         run: |
           $pkg = Get-ChildItem -Recurse -Path "win32/packages" -Filter "librdkafka.redist*" | Select-Object -First 1
           if (-not $pkg) { throw "librdkafka.redist package not found under win32/packages" }
-          $dllPath = Join-Path $pkg.FullName "runtimes/win-x86/native"
-          Copy-Item "$dllPath/*.dll" "win32/Release/" -Force
+          Copy-Item "$($pkg.FullName)\runtimes/win-x86/native/*.dll" "win32/Release/" -Force
 
-      - name: Zip x86 artifacts
+      - name: Zip x86 runtime files
         shell: pwsh
         run: |
-          Compress-Archive -Path "win32\Release\*" -DestinationPath "kcat-windows-x86.zip" -Force
+          $src = "win32/Release"
+          $out = "kcat-windows-x86"
+          New-Item -ItemType Directory $out -Force | Out-Null
+
+          $keep = @(
+            "kcat.exe",
+            "librdkafka.dll",
+            "librdkafkacpp.dll",
+            "libcrypto*.dll",
+            "libssl*.dll",
+            "zlib1.dll",
+            "zstd.dll",
+            "msvcp*.dll",
+            "vcruntime*.dll",
+            "kcat.pdb"  # optional
+          )
+
+          foreach ($pattern in $keep) {
+            Get-ChildItem "$src/$pattern" -ErrorAction SilentlyContinue | Copy-Item -Destination $out -Force
+          }
+
+          Compress-Archive -Path "$out/*" -DestinationPath "$out.zip" -Force
 
       - name: Upload x86 artifact
         uses: actions/upload-artifact@v4
@@ -75,10 +116,9 @@ jobs:
           name: kcat-windows-x86
           path: kcat-windows-x86.zip
 
-
-  # ------------------------------------------------------------
-  # Publish Release Assets (only runs when a GitHub Release is published)
-  # ------------------------------------------------------------
+  # ---------------------------
+  # Publish Release Assets
+  # ---------------------------
   publish:
     needs: build
     runs-on: ubuntu-latest
@@ -92,15 +132,13 @@ jobs:
       - name: Upload x64 ZIP to GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          files: |
-            artifacts/kcat-windows-x64/kcat-windows-x64.zip
+          files: artifacts/kcat-windows-x64/kcat-windows-x64.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload x86 ZIP to GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          files: |
-            artifacts/kcat-windows-x86/kcat-windows-x86.zip
+          files: artifacts/kcat-windows-x86/kcat-windows-x86.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
