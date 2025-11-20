@@ -134,5 +134,11 @@ jobs:
         with:
           files: artifacts/kcat-windows-x64.zip
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Upload x86 ZIP to GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: artifacts/kcat-windows-x86.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
